@@ -1,0 +1,8 @@
+*/bin
+*/obj
+*/.vs
+*.exe
+*.sql
+*.tmp
+*.log
+*.lock
