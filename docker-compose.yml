@@ -1,0 +1,11 @@
+version: '3.3'
+services:
+  mqtt1:
+    image: toke/mosquitto
+    ports:
+      - 1883:1883
+    volumes:
+      - ./config:/mqtt/config
+      - ./data:/mqtt/data
+      - ./log:/mqtt/log
+    restart: always
