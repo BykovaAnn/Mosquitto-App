@@ -30,6 +30,11 @@ namespace MqttApp
                 string clientId = Guid.NewGuid().ToString();
                 localClient.Connect(clientId);
                 localClient.Publish(topic, Encoding.UTF8.GetBytes(message), uPLibrary.Networking.M2Mqtt.Messages.MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, false);
+                for (int i = 0; i < 100; i++)
+                {
+                    localClient.Publish(topic, Encoding.UTF8.GetBytes(i.ToString()), uPLibrary.Networking.M2Mqtt.Messages.MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, false);
+                    Thread.Sleep(3000);
+                }
 
             }
             catch (Exception ex)
@@ -64,14 +69,14 @@ namespace MqttApp
         static async Task CreateManagedClient(string topic)
         {
             string clientId = "ManagedClient";
-            var messageBuilder = new MqttClientOptionsBuilder()
+            var clientOptions = new MqttClientOptionsBuilder()
                                     .WithClientId(clientId)
                                     .WithTcpServer(brokenHostName, port: 1883)
                                     .WithCleanSession()
                                     .Build();
-            var managedOptions = new ManagedMqttClientOptionsBuilder()
+            ManagedMqttClientOptions managedClientOptions = new ManagedMqttClientOptionsBuilder()
                                         .WithAutoReconnectDelay(TimeSpan.FromSeconds(5))
-                                        .WithClientOptions(messageBuilder)
+                                        .WithClientOptions(clientOptions)
                                         .Build();
             var managedClient = new MqttFactory().CreateManagedMqttClient();
             //Subscribe to the topic
@@ -79,7 +84,7 @@ namespace MqttApp
             //                                        .WithTopic(topic)
             //                                        .WithQualityOfServiceLevel(MQTTnet.Protocol.MqttQualityOfServiceLevel.ExactlyOnce)
             //                                        .Build());
-            await managedClient.StartAsync(managedOptions);
+            await managedClient.StartAsync(managedClientOptions);
             await managedClient.PublishAsync(topic, "Hello from managed client, lets count from 0 to 99");
             //Show the received messege in form topic: message
             //managedClient.UseApplicationMessageReceivedHandler(e =>
@@ -102,7 +107,7 @@ namespace MqttApp
             //Sending messages 100 times every 3 seconds
             for (int i = 0; i < 100; i++)
             {
-                var result = await managedClient.PublishAsync(topic, i.ToString(), MQTTnet.Protocol.MqttQualityOfServiceLevel.ExactlyOnce);
+                await managedClient.PublishAsync(topic, i.ToString(), MQTTnet.Protocol.MqttQualityOfServiceLevel.ExactlyOnce);
                 Thread.Sleep(3000);
             }
             Console.ReadLine();
